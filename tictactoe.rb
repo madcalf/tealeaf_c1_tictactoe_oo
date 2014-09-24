@@ -1,38 +1,16 @@
 # Tic Tac Toe OOP
 
-# Requirements
-# prompt player for name
-# player choses square
-# check for win
-# computer choses square
-#   check for win opportunity
-#   check for block
-# check for win
-# repeat until winner or no more squares
-# display winner
-
-# Nouns
-# ------
-# player
-# computer
-# game board
-#  square
-#  marker
-
-# Verbs
-# place marker
-# choose square
-# draw
 require 'pry'
 
 class Player
-  # include Automatable
   attr_reader :name, :marker, :board
+  attr_accessor :score
   
   def initialize(name, marker, board)
     @name = name.capitalize
     @marker = marker
     @board = board
+    @score = 0
   end
 
   def choose
@@ -47,7 +25,7 @@ class Player
     
     board.set_position(pos, self.marker)
   end
-
+  
   def numeric?(str) 
     # using Float this way seems to be a popular way to do this on SO
     # anything wrong with it? 
@@ -66,14 +44,14 @@ class AIPlayer < Player
   def choose
     pos = self.board.find_win_position(self.marker)
     pos = self.board.find_block_position(self.marker) if !pos
-    pos = self.board.find_empty_pos if !pos
+    pos = self.board.find_empty_position if !pos
     board.set_position(pos, self.marker)
   end
 end # AIPlayer
   
-# board_square consists of 3 lines used to display a representation of x or o
+# a BoardSquare consists of 3 lines used to display a representation of x or o
 # value is 'x', 'o' or EMPTY
-# position is place on the game board. Not the array index. Passed in when created.
+# position is square's number on the game board. Not the array index.
 class BoardSquare
   SPACE2 = "  "
   SPACE5 = "     "
@@ -111,15 +89,15 @@ class BoardSquare
   end
 end # BoardSquare
 
-# board is an array of board_squares
+# board is an array of BoardSquare objects
 class GameBoard
   TOP_LINE = " #{'_'*17} "
   BOTTOM_LINE = "|#{'_'*17}|"
   GRID_LINE = "#{'-'*5}+#{'-'*5}+#{'-'*5} "
   WIN_GROUPS =  [ [0, 1, 2], [3, 4, 5], [6, 7, 8], 
-                    [0, 3, 6], [1, 4, 7], [2, 5, 8], 
-                    [0, 4, 8], [2, 4, 6]
-                  ]  
+                  [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+                  [0, 4, 8], [2, 4, 6]
+                ]  
                   
   attr_reader :squares
   
@@ -127,8 +105,11 @@ class GameBoard
     @squares = Array.new(9).collect!.with_index { |item, i| BoardSquare.new(i + 1) }
   end
   
+  def reset
+    self.squares.each { |square| square.value = BoardSquare::EMPTY}
+  end
+  
   def set_position(pos, value)
-    # puts "set_position() #{pos}, #{value}"
     self.squares[pos - 1].value = value  
   end
   
@@ -136,15 +117,11 @@ class GameBoard
     self.squares[pos - 1].empty?
   end
 
-  # returns a random empty square position
-  def find_empty_pos
+  def find_empty_position
     empty_squares = squares.select { |square| square.empty? }
-    # puts "empty sqares: #{empty_squares.size}"
     empty_squares.sample.position
   end
 
-  # find consec squares w with 3 x's or o's
-  # RENAME TO find_win?? or check_for_win ??
   def three_in_a_row?(marker)
     result = false
     WIN_GROUPS.each do |arr|
@@ -157,14 +134,14 @@ class GameBoard
   def find_win_position(marker)
     group = find_group_of_two(marker, true)
     if group
-      return get_empty_index(group) + 1
+      return get_empty_position(group)   # get_empty_index(group) + 1
     end
   end
   
   def find_block_position(marker) 
     group = find_group_of_two(marker, false)
     if group
-      return get_empty_index(group) + 1
+      return get_empty_position(group)
     end
   end
   
@@ -174,29 +151,25 @@ class GameBoard
   end
   
   def get_empty_position(group)
-    get_empty_index + 1
+    get_empty_index(group) + 1
   end
   
   def all_squares_occupied?
     !squares.any? { |square| square.empty?}
-    # get_available_square_positions.size == 0
   end
-  # def get_available_square_positions
-  #   squares.collect { |square| square.empty? ? square.position : nil }.compact
-  # end
-  
+
   def draw
-    puts "#{self.squares[0].top}|#{self.squares[1].top}|#{self.squares[2].top}\n"
-    puts "#{self.squares[0].mid}|#{self.squares[1].mid}|#{self.squares[2].mid}\n"
-    puts "#{self.squares[0].bottom}|#{self.squares[1].bottom}|#{self.squares[2].bottom}\n"
-    puts "#{GRID_LINE}\n"
-    puts "#{self.squares[3].top}|#{self.squares[4].top}|#{self.squares[5].top}\n"
-    puts "#{self.squares[3].mid}|#{self.squares[4].mid}|#{self.squares[5].mid}\n"
-    puts "#{self.squares[3].bottom}|#{self.squares[4].bottom}|#{self.squares[5].bottom}\n"
-    puts "#{GRID_LINE}\n"
-    puts "#{self.squares[6].top}|#{self.squares[7].top}|#{self.squares[8].top}\n"
-    puts "#{self.squares[6].mid}|#{self.squares[7].mid}|#{self.squares[8].mid}\n"
-    puts "#{self.squares[6].bottom}|#{self.squares[7].bottom}|#{self.squares[8].bottom}\n"
+    puts "#{' '*5} #{self.squares[0].top}|#{self.squares[1].top}|#{self.squares[2].top}\n"
+    puts "#{' '*5} #{self.squares[0].mid}|#{self.squares[1].mid}|#{self.squares[2].mid}\n"
+    puts "#{' '*5} #{self.squares[0].bottom}|#{self.squares[1].bottom}|#{self.squares[2].bottom}\n"
+    puts "#{' '*5} #{GRID_LINE}\n"
+    puts "#{' '*5} #{self.squares[3].top}|#{self.squares[4].top}|#{self.squares[5].top}\n"
+    puts "#{' '*5} #{self.squares[3].mid}|#{self.squares[4].mid}|#{self.squares[5].mid}\n"
+    puts "#{' '*5} #{self.squares[3].bottom}|#{self.squares[4].bottom}|#{self.squares[5].bottom}\n"
+    puts "#{' '*5} #{GRID_LINE}\n"
+    puts "#{' '*5} #{self.squares[6].top}|#{self.squares[7].top}|#{self.squares[8].top}\n"
+    puts "#{' '*5} #{self.squares[6].mid}|#{self.squares[7].mid}|#{self.squares[8].mid}\n"
+    puts "#{' '*5} #{self.squares[6].bottom}|#{self.squares[7].bottom}|#{self.squares[8].bottom}\n"
   end
   
   private
@@ -222,48 +195,59 @@ class GameBoard
 end # GameBoard
   
 class Game
-  SLEEP_TIME = 1
-  BLINK_TIME = 0.25
+  attr_accessor :player, :computer, :board, :message, :total_games, :auto_play,
+                :sleep_time
   
-  attr_accessor :player, :computer, :board, :message
- 
   def initialize
     @board = GameBoard.new 
     @computer = AIPlayer.new("Computer", "o", self.board)
     @message = []
+    @total_games = 0
+    @auto_play = false
+    @sleep_time = 1
   end
 
   def run
-    intro
-    self.player = Player.new(get_player_name, 'x', self.board)
-    puts "Welcome #{self.player.name}"
+    draw_title
+    name = get_player_name
+    system 'clear'
+    draw_title
+    puts "Welcome, #{name}"
+    puts "Would you like to [W]atch or [P]lay ?"
+    input = gets.chomp.downcase
+    if input == 'w'
+      puts "Ok, just sit back and watch how it's done!"
+      sleep 1
+      self.auto_play = true
+      self.sleep_time *= 0.5
+      self.player = AIPlayer.new(name, 'x', self.board)
+    elsif input == 'p'
+      self.player = Player.new(name, "x", self.board)
+    end
+    sleep self.sleep_time
     draw
-    
+    play
+  end
+  
+  def new_game
+    self.board.reset
+    self.message = []
+    self.total_games += 1
+    draw
+  end
+  
+  def play
+    new_game
     loop do
       self.player_move
       break if self.end_game?
       self.computer_move
       break if self.end_game?
     end
+    update_score
     draw
-    puts "Play again? [Y]es  |  [N]o"
-    run if gets.chomp.downcase == "y"
-  end
-  
-  def new_game
-    self.board.clear
-    draw
-  end
-  
-  def play
-    
-  end
-  
-  def intro
-    puts '----------------------------------'
-    puts '          Tic Tac Toe'
-    puts '----------------------------------'
-        
+    puts "\nPlay again? [Y]es   [N]o"
+    play if gets.chomp.downcase == "y"
   end
   
   def get_player_name
@@ -271,34 +255,38 @@ class Game
     gets.chomp.capitalize
   end
   
-  # gets player selection or tells player to make selection
-  # draws selection? or stores it in game board state
   def player_move
-    # puts "Your move, #{self.player.name}. Select 1 - 9"
-    self.message[1] = "Your move, #{self.player.name}. Select 1 - 9"
+    if self.auto_play
+      self.message[1] = "#{self.player.name}'s move"
+    else
+      self.message[1] = "Your move, #{self.player.name}. Select 1 - 9"
+    end
     draw
+    sleep self.sleep_time
     self.player.choose
     draw
+    sleep self.sleep_time if self.auto_play
   end
   
   def computer_move
-    # puts "#{self.computer.name}'s move:"
-    self.message[1] = "#{self.computer.name}'s move:"
+    self.message[1] = "#{self.computer.name}'s move"
     draw
-    sleep SLEEP_TIME
+    sleep self.sleep_time
     self.computer.choose
     draw
+    sleep self.sleep_time if self.auto_play
   end
     
   # see if we have a winner or all squares are taken
   def end_game?
-    self.message[1] = ''
-    self.message[2] = ''
+    self.message = []
     if winner?(self.player)
       self.message[2] = "#{self.player.name} wins!"
+      self.player.score += 1
       result = true
     elsif winner?(self.computer)
       self.message[2] = "#{self.computer.name} wins!"
+      self.computer.score += 1
       result = true
     elsif self.board.all_squares_occupied?
       self.message[2] = "Tie game!"
@@ -312,15 +300,24 @@ class Game
     result = self.board.three_in_a_row?(which_player.marker)
   end
   
+  def update_score
+    self.message[3] = "#{self.player.name}: #{self.player.score}   #{self.computer.name}: #{self.computer.score}   Tie: #{self.total_games - self.computer.score - self.player.score}"
+  end
+  
+  def draw_title
+    puts '----------------------------------'
+    puts '          Tic Tac Toe'
+    puts '----------------------------------'
+  end
+  
   def draw
     system 'clear'
-    intro
+    draw_title
     self.board.draw
     self.message.each { |item| puts "#{item}"}
   end
   
 end # Game
-
 
 # ==================== PROGRAM START ==================== 
 system 'clear'
