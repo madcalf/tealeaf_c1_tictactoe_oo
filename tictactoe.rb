@@ -1,3 +1,4 @@
+# encoding: UTF-8
 # Tic Tac Toe OOP
 
 require 'pry'
@@ -123,18 +124,16 @@ class GameBoard
   end
 
   def three_in_a_row?(marker)
-    result = false
     WIN_GROUPS.each do |arr|
-      result = arr.all? { |index| self.squares[index].value == marker}
-      break if result
+      return true if arr.all? { |index| self.squares[index].value == marker}
     end 
-    return result
+    return false
   end  
   
   def find_win_position(marker)
     group = find_group_of_two(marker, true)
     if group
-      return get_empty_position(group)   # get_empty_index(group) + 1
+      return get_empty_position(group)
     end
   end
   
@@ -145,17 +144,12 @@ class GameBoard
     end
   end
   
-  # passed a group of 3 indexes, return which index refers to an empty square
-  def get_empty_index(group)
-    index = group.select { |i| squares[i].empty?}[0]
-  end
-  
   def get_empty_position(group)
     get_empty_index(group) + 1
   end
   
   def all_squares_occupied?
-    !squares.any? { |square| square.empty?}
+    squares.all? { |square| !square.empty? }
   end
 
   def draw
@@ -174,6 +168,11 @@ class GameBoard
   
   private
 
+  # passed a group of 3 indexes, return which index refers to an empty square
+  def get_empty_index(group)
+    index = group.select { |i| squares[i].empty?}[0]
+  end
+  
   # returns first group that contains 2 of specified marker plus an empty square
   def find_group_of_two(marker, match_marker)
     WIN_GROUPS.each do |group|
@@ -251,7 +250,7 @@ class Game
   end
   
   def get_player_name
-    puts "Please tell me your name?"  # may move this so this has one responsibility
+    puts "Please tell me your name?"
     gets.chomp.capitalize
   end
   
